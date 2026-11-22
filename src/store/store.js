@@ -4,7 +4,7 @@ const initialState = {
   products: [],
   cart: [],
   user: null,
-  loading: false,
+  loading: true,
 };
 
 const appSlice = createSlice({
