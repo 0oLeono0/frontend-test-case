@@ -5,6 +5,7 @@ const initialState = {
   cart: [],
   user: null,
   loading: true,
+  isCheckingOut: false,
 };
 
 const appSlice = createSlice({
@@ -16,6 +17,8 @@ const appSlice = createSlice({
     },
 
     addToCart: (state, action) => {
+      if (state.isCheckingOut) return;
+
       const product = action.payload;
       const existingItem = state.cart.find((item) => item.id === product.id);
 
@@ -27,10 +30,14 @@ const appSlice = createSlice({
     },
 
     removeFromCart: (state, action) => {
+      if (state.isCheckingOut) return;
+
       state.cart = state.cart.filter((item) => item.id !== action.payload);
     },
 
     updateQuantity: (state, action) => {
+      if (state.isCheckingOut) return;
+
       const { id, quantity } = action.payload;
       const index = state.cart.findIndex((item) => item.id === id);
 
@@ -51,8 +58,17 @@ const appSlice = createSlice({
       state.loading = action.payload;
     },
 
-    clearCart: (state) => {
+    startCheckout: (state) => {
+      if (state.cart.length === 0 || state.isCheckingOut) return;
+
+      state.isCheckingOut = true;
+    },
+
+    completeCheckout: (state) => {
+      if (!state.isCheckingOut) return;
+
       state.cart = [];
+      state.isCheckingOut = false;
     },
   },
 });
@@ -61,6 +77,7 @@ export const selectProducts = (state) => state.app.products;
 export const selectCart = (state) => state.app.cart;
 export const selectUser = (state) => state.app.user;
 export const selectLoading = (state) => state.app.loading;
+export const selectIsCheckingOut = (state) => state.app.isCheckingOut;
 
 export const selectCartCount = (state) =>
   selectCart(state).reduce((count, item) => count + item.quantity, 0);
@@ -78,7 +95,8 @@ export const {
   updateQuantity,
   setUser,
   setLoading,
-  clearCart,
+  startCheckout,
+  completeCheckout,
 } = appSlice.actions;
 
 export const store = configureStore({

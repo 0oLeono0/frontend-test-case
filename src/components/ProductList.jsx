@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { mockProducts } from "../data/mockProducts";
 import {
   addToCart,
+  selectIsCheckingOut,
   selectLoading,
   selectProducts,
   setLoading,
@@ -14,6 +15,7 @@ export default function ProductList() {
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
   const loading = useSelector(selectLoading);
+  const isCheckingOut = useSelector(selectIsCheckingOut);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -103,6 +105,7 @@ export default function ProductList() {
               key={product.id}
               product={product}
               onAdd={handleAddProduct}
+              disabled={isCheckingOut}
             />
           ))
         )}

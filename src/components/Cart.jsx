@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  clearCart,
+  completeCheckout,
   removeFromCart,
   selectCart,
   selectCartCount,
+  selectIsCheckingOut,
   selectTotalPrice,
+  startCheckout,
   updateQuantity,
 } from "../store/store";
 
@@ -14,9 +16,22 @@ export default function Cart() {
   const cart = useSelector(selectCart);
   const cartCount = useSelector(selectCartCount);
   const totalPrice = useSelector(selectTotalPrice);
+  const isCheckingOut = useSelector(selectIsCheckingOut);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  useEffect(() => {
+    if (!isCheckingOut) return;
+
+    const timer = setTimeout(() => {
+      dispatch(completeCheckout());
+      setShowConfirmation(true);
+      setIsOpen(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [dispatch, isCheckingOut]);
 
   const handleRemoveItem = (id) => {
     dispatch(removeFromCart(id));
@@ -27,13 +42,8 @@ export default function Cart() {
   };
 
   const handleCheckout = () => {
-    setShowCheckout(true);
-    setTimeout(() => {
-      alert("Заказ оформлен!");
-      dispatch(clearCart());
-      setShowCheckout(false);
-      setIsOpen(false);
-    }, 1000);
+    setShowConfirmation(false);
+    dispatch(startCheckout());
   };
 
   return (
@@ -41,6 +51,7 @@ export default function Cart() {
       <button className="cart-toggle" onClick={() => setIsOpen(!isOpen)}>
         Корзина ({cartCount})
       </button>
+      <div role="status">{showConfirmation && "Заказ оформлен!"}</div>
 
       {isOpen && (
         <div className="cart-dropdown">
@@ -61,6 +72,7 @@ export default function Cart() {
                     <p>${item.price}</p>
                     <div className="quantity-controls">
                       <button
+                        disabled={isCheckingOut}
                         onClick={() =>
                           handleUpdateQuantity(item.id, item.quantity - 1)
                         }
@@ -69,6 +81,7 @@ export default function Cart() {
                       </button>
                       <span>{item.quantity}</span>
                       <button
+                        disabled={isCheckingOut}
                         onClick={() =>
                           handleUpdateQuantity(item.id, item.quantity + 1)
                         }
@@ -79,6 +92,7 @@ export default function Cart() {
                   </div>
                   <button
                     className="remove-btn"
+                    disabled={isCheckingOut}
                     onClick={() => handleRemoveItem(item.id)}
                   >
                     Удалить
@@ -93,9 +107,9 @@ export default function Cart() {
             <button
               className="checkout-btn"
               onClick={handleCheckout}
-              disabled={cart.length === 0 || showCheckout}
+              disabled={cart.length === 0 || isCheckingOut}
             >
-              {showCheckout ? "Оформляем..." : "Оформить заказ"}
+              {isCheckingOut ? "Оформляем..." : "Оформить заказ"}
             </button>
           </div>
         </div>
